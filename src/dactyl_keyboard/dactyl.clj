@@ -36,7 +36,7 @@
 
 (def wall-z-offset -0.3)                                      ; -5                ; original=-15 length of the first downward-sloping part of the wall (negative)
 (def wall-xy-offset 1)
-(def bk-left-xy-offset 4)
+(def bk-left-xy-offset 5)
 (def wall-thickness 2)                                      ; wall thickness parameter; originally 5
 
 ; If you use Cherry MX or Gateron switches, this can be turned on.
@@ -463,9 +463,33 @@
       (place2 (translate (wall-locate2 xy-offset dx2 dy2) post2))
       (place2 (translate (wall-locate3 xy-offset dx2 dy2) post2)))))
 
+; dx1, dy1, dx2, dy2 = direction of the wall. '1' for front, '-1' for back, '0' for 'not in this direction'.
+; place1, place2 = function that places an object at a location, typically refers to the center of a key position.
+; post1, post2 = the shape that should be rendered
+(defn wall-brace-corner [place1 dx1 dy1 post1 place2 dx2 dy2 post2]
+  (union
+    (hull
+      (place1 post1)
+      (place1 (translate (wall-locate1 dx1 dy1) post1))
+      (place1 (translate (wall-locate2 bk-left-xy-offset dx1 dy1) post1))
+      (place1 (translate (wall-locate3 bk-left-xy-offset dx1 dy1) post1))
+      (place2 post2)
+      (place2 (translate (wall-locate1 dx2 dy2) post2))
+      (place2 (translate (wall-locate2 wall-xy-offset dx2 dy2) post2))
+      (place2 (translate (wall-locate3 wall-xy-offset dx2 dy2) post2)))
+    (bottom-hull
+      (place1 (translate (wall-locate2 bk-left-xy-offset dx1 dy1) post1))
+      (place1 (translate (wall-locate3 bk-left-xy-offset dx1 dy1) post1))
+      (place2 (translate (wall-locate2 wall-xy-offset dx2 dy2) post2))
+      (place2 (translate (wall-locate3 wall-xy-offset dx2 dy2) post2)))))
+
 
 (defn key-wall-brace [xy-offset x1 y1 dx1 dy1 post1 x2 y2 dx2 dy2 post2]
   (wall-brace xy-offset (partial key-place x1 y1) dx1 dy1 post1
+              (partial key-place x2 y2) dx2 dy2 post2))
+
+(defn key-wall-brace-corner [x1 y1 dx1 dy1 post1 x2 y2 dx2 dy2 post2]
+  (wall-brace-corner(partial key-place x1 y1) dx1 dy1 post1
               (partial key-place x2 y2) dx2 dy2 post2))
 
 (defn key-corner [xy-offset x y loc]
@@ -475,10 +499,17 @@
     :bl (key-wall-brace xy-offset x y 0 -1 web-post-bl x y -1 0 web-post-bl)
     :br (key-wall-brace xy-offset x y 0 -1 web-post-br x y 1 0 web-post-br)))
 
+(defn key-corner-fl [x y loc]
+  (case loc
+    :tl (key-wall-brace-corner x y 0 1 web-post-tl x y -1 0 web-post-tl)
+    :tr (key-wall-brace-corner x y 0 1 web-post-tr x y 1 0 web-post-tr)
+    :bl (key-wall-brace-corner x y 0 -1 web-post-bl x y -1 0 web-post-bl)
+    :br (key-wall-brace-corner x y 0 -1 web-post-br x y 1 0 web-post-br)))
+
 (def right-wall
-  (union (key-corner bk-left-xy-offset lastcol 0 :tr)
-         (for [y (range 0 lastrow)] (key-wall-brace bk-left-xy-offset lastcol y 1 0 web-post-tr lastcol y 1 0 web-post-br))
-         (for [y (range 1 lastrow)] (key-wall-brace bk-left-xy-offset lastcol (dec y) 1 0 web-post-br lastcol y 1 0 web-post-tr))
+  (union (key-corner-fl lastcol 0 :tr)
+         (for [y (range 0 lastrow)] (key-wall-brace wall-xy-offset lastcol y 1 0 web-post-tr lastcol y 1 0 web-post-br))
+         (for [y (range 1 lastrow)] (key-wall-brace wall-xy-offset lastcol (dec y) 1 0 web-post-br lastcol y 1 0 web-post-tr))
          (key-corner wall-xy-offset lastcol cornerrow :br)))
 
 
@@ -491,7 +522,7 @@
     ; left wall
     (for [y (range 0 lastrow)] (key-wall-brace bk-left-xy-offset 0 y -1 0 web-post-tl 0 y -1 0 web-post-bl))
     (for [y (range 1 lastrow)] (key-wall-brace bk-left-xy-offset 0 (dec y) -1 0 web-post-bl 0 y -1 0 web-post-tl))
-    (wall-brace bk-left-xy-offset (partial key-place 0 cornerrow) -1 0 web-post-bl thumb-m-place 0 1 web-post-tl)
+    (wall-brace-corner (partial key-place 0 cornerrow) -1 0 web-post-bl thumb-m-place 0 1 web-post-tl)
     ; left-back-corner
     (key-wall-brace bk-left-xy-offset 0 0 0 1 web-post-tl 0 0 -1 0 web-post-tl)
     ; front wall
