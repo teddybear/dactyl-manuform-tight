@@ -30,11 +30,11 @@
 (def thumb-offsets [10 -5 1])
 
 (def keyboard-z-offset 7)                                   ; controls overall height; original=9 with centercol=3; use 16 for centercol=2
-(def bottom-height 2)                                    ; plexiglass plate or printed plate
-(def extra-width 3)                                       ; extra space between the base of keys; original= 2
+(def bottom-height 0)                                    ; plexiglass plate or printed plate
+(def extra-width 2)                                       ; extra space between the base of keys; original= 2
 (def extra-height -0.5)                                      ; original= 0.5
 
-(def wall-z-offset -1)                                      ; -5                ; original=-15 length of the first downward-sloping part of the wall (negative)
+(def wall-z-offset -0.3)                                      ; -5                ; original=-15 length of the first downward-sloping part of the wall (negative)
 (def wall-xy-offset 1)
 
 (def wall-thickness 2)                                      ; wall thickness parameter; originally 5
@@ -403,25 +403,29 @@
       (key-place 0 cornerrow (translate (wall-locate1 -1 0) web-post-bl))
       (thumb-m-place web-post-tr)
       (thumb-m-place web-post-tl))
-    (piramid-hulls                                          ; top ridge thumb side
-      (key-place 0 cornerrow (translate (wall-locate1 -1 0) fat-web-post-bl))
-      (key-place 0 cornerrow (translate (wall-locate2 -1 0) web-post-bl))
+    ;(debug( piramid-hulls                                          ; top ridge thumb side
+    ;  (key-place 0 cornerrow (translate (wall-locate1 -1 0) fat-web-post-bl))
+    ;  (key-place 0 cornerrow (translate (wall-locate2 -1 0) web-post-bl))
+    ;  (key-place 0 cornerrow web-post-bl)
+    ;  ;(thumb-r-place web-post-tr)
+    ;  (thumb-r-place web-post-tl)
+    ;  (thumb-m-place web-post-tr)
+    ;  (key-place 0 cornerrow (translate (wall-locate3 -1 0) web-post-bl))
+    ;  ))
+    (triangle-hulls
+      (key-place 0 cornerrow (translate (wall-locate1 -1 0) web-post-bl))
       (key-place 0 cornerrow web-post-bl)
-      ;(thumb-r-place web-post-tr)
-      (thumb-r-place web-post-tl)
       (thumb-m-place web-post-tr)
-      (key-place 0 cornerrow (translate (wall-locate3 -1 0) web-post-bl))
-      )
-    (triangle-hulls
-      (key-place 0 cornerrow fat-web-post-br)
-      (key-place 0 cornerrow fat-web-post-bl)
       (thumb-r-place web-post-tl)
-      (key-place 1 cornerrow web-post-bl)
-      (key-place 1 cornerrow web-post-br)
-      )
+     )
     (triangle-hulls
-      (thumb-r-place fat-web-post-tl)
-      (thumb-r-place fat-web-post-tr)
+      (thumb-r-place web-post-tl)
+      (thumb-r-place web-post-tr)
+      (key-place 0 cornerrow web-post-bl)
+      (key-place 1 cornerrow web-post-br)
+     )
+    (triangle-hulls
+      (thumb-r-place web-post-tr)
       (key-place 1 cornerrow web-post-br)
       (key-place 2 lastrow web-post-tl)
       )
