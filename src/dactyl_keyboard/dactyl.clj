@@ -36,7 +36,7 @@
 
 (def wall-z-offset -0.3)                                      ; -5                ; original=-15 length of the first downward-sloping part of the wall (negative)
 (def wall-xy-offset 1)
-
+(def bk-left-xy-offset 3)
 (def wall-thickness 2)                                      ; wall thickness parameter; originally 5
 
 ; If you use Cherry MX or Gateron switches, this can be turned on.
@@ -362,8 +362,8 @@
   (hull p (bottom 0.001 p)))
 
 (defn wall-locate1 [dx dy] [(* dx wall-thickness) (* dy wall-thickness) 0])
-(defn wall-locate2 [dx dy] [(* dx wall-xy-offset) (* dy wall-xy-offset) wall-z-offset])
-(defn wall-locate3 [dx dy] [(* dx (+ wall-xy-offset wall-thickness)) (* dy (+ wall-xy-offset wall-thickness)) wall-z-offset])
+(defn wall-locate2 [xy-offset dx dy] [(* dx xy-offset) (* dy xy-offset) wall-z-offset])
+(defn wall-locate3 [xy-offset dx dy] [(* dx (+ xy-offset wall-thickness)) (* dy (+ xy-offset wall-thickness)) wall-z-offset])
 
 (def thumb-connectors
   (union
@@ -446,73 +446,74 @@
 ; dx1, dy1, dx2, dy2 = direction of the wall. '1' for front, '-1' for back, '0' for 'not in this direction'.
 ; place1, place2 = function that places an object at a location, typically refers to the center of a key position.
 ; post1, post2 = the shape that should be rendered
-(defn wall-brace [place1 dx1 dy1 post1 place2 dx2 dy2 post2]
+(defn wall-brace [xy-offset place1 dx1 dy1 post1 place2 dx2 dy2 post2]
   (union
     (hull
       (place1 post1)
       (place1 (translate (wall-locate1 dx1 dy1) post1))
-      (place1 (translate (wall-locate2 dx1 dy1) post1))
-      (place1 (translate (wall-locate3 dx1 dy1) post1))
+      (place1 (translate (wall-locate2 xy-offset dx1 dy1) post1))
+      (place1 (translate (wall-locate3 xy-offset dx1 dy1) post1))
       (place2 post2)
       (place2 (translate (wall-locate1 dx2 dy2) post2))
-      (place2 (translate (wall-locate2 dx2 dy2) post2))
-      (place2 (translate (wall-locate3 dx2 dy2) post2)))
+      (place2 (translate (wall-locate2 xy-offset dx2 dy2) post2))
+      (place2 (translate (wall-locate3 xy-offset dx2 dy2) post2)))
     (bottom-hull
-      (place1 (translate (wall-locate2 dx1 dy1) post1))
-      (place1 (translate (wall-locate3 dx1 dy1) post1))
-      (place2 (translate (wall-locate2 dx2 dy2) post2))
-      (place2 (translate (wall-locate3 dx2 dy2) post2)))))
+      (place1 (translate (wall-locate2 xy-offset dx1 dy1) post1))
+      (place1 (translate (wall-locate3 xy-offset dx1 dy1) post1))
+      (place2 (translate (wall-locate2 xy-offset dx2 dy2) post2))
+      (place2 (translate (wall-locate3 xy-offset dx2 dy2) post2)))))
 
-(defn key-wall-brace [x1 y1 dx1 dy1 post1 x2 y2 dx2 dy2 post2]
-  (wall-brace (partial key-place x1 y1) dx1 dy1 post1
+
+(defn key-wall-brace [xy-offset x1 y1 dx1 dy1 post1 x2 y2 dx2 dy2 post2]
+  (wall-brace xy-offset (partial key-place x1 y1) dx1 dy1 post1
               (partial key-place x2 y2) dx2 dy2 post2))
 
-(defn key-corner [x y loc]
+(defn key-corner [xy-offset x y loc]
   (case loc
-    :tl (key-wall-brace x y 0 1 web-post-tl x y -1 0 web-post-tl)
-    :tr (key-wall-brace x y 0 1 web-post-tr x y 1 0 web-post-tr)
-    :bl (key-wall-brace x y 0 -1 web-post-bl x y -1 0 web-post-bl)
-    :br (key-wall-brace x y 0 -1 web-post-br x y 1 0 web-post-br)))
+    :tl (key-wall-brace xy-offset x y 0 1 web-post-tl x y -1 0 web-post-tl)
+    :tr (key-wall-brace xy-offset x y 0 1 web-post-tr x y 1 0 web-post-tr)
+    :bl (key-wall-brace xy-offset x y 0 -1 web-post-bl x y -1 0 web-post-bl)
+    :br (key-wall-brace xy-offset x y 0 -1 web-post-br x y 1 0 web-post-br)))
 
 (def right-wall
-  (union (key-corner lastcol 0 :tr)
-         (for [y (range 0 lastrow)] (key-wall-brace lastcol y 1 0 web-post-tr lastcol y 1 0 web-post-br))
-         (for [y (range 1 lastrow)] (key-wall-brace lastcol (dec y) 1 0 web-post-br lastcol y 1 0 web-post-tr))
-         (key-corner lastcol cornerrow :br)))
+  (union (key-corner bk-left-xy-offset lastcol 0 :tr)
+         (for [y (range 0 lastrow)] (key-wall-brace bk-left-xy-offset lastcol y 1 0 web-post-tr lastcol y 1 0 web-post-br))
+         (for [y (range 1 lastrow)] (key-wall-brace bk-left-xy-offset lastcol (dec y) 1 0 web-post-br lastcol y 1 0 web-post-tr))
+         (key-corner wall-xy-offset lastcol cornerrow :br)))
 
 
 (def case-walls
   (union
     right-wall
     ; back wall
-    (for [x (range 0 ncols)] (key-wall-brace x 0 0 1 web-post-tl x 0 0 1 web-post-tr))
-    (for [x (range 1 ncols)] (key-wall-brace x 0 0 1 web-post-tl (dec x) 0 0 1 web-post-tr))
+    (for [x (range 0 ncols)] (key-wall-brace bk-left-xy-offset x 0 0 1 web-post-tl x 0 0 1 web-post-tr))
+    (for [x (range 1 ncols)] (key-wall-brace bk-left-xy-offset x 0 0 1 web-post-tl (dec x) 0 0 1 web-post-tr))
     ; left wall
-    (for [y (range 0 lastrow)] (key-wall-brace 0 y -1 0 web-post-tl 0 y -1 0 web-post-bl))
-    (for [y (range 1 lastrow)] (key-wall-brace 0 (dec y) -1 0 web-post-bl 0 y -1 0 web-post-tl))
-    (wall-brace (partial key-place 0 cornerrow) -1 0 web-post-bl thumb-m-place 0 1 web-post-tl)
+    (for [y (range 0 lastrow)] (key-wall-brace bk-left-xy-offset 0 y -1 0 web-post-tl 0 y -1 0 web-post-bl))
+    (for [y (range 1 lastrow)] (key-wall-brace bk-left-xy-offset 0 (dec y) -1 0 web-post-bl 0 y -1 0 web-post-tl))
+    (wall-brace bk-left-xy-offset (partial key-place 0 cornerrow) -1 0 web-post-bl thumb-m-place 0 1 web-post-tl)
     ; left-back-corner
-    (key-wall-brace 0 0 0 1 web-post-tl 0 0 -1 0 web-post-tl)
+    (key-wall-brace bk-left-xy-offset 0 0 0 1 web-post-tl 0 0 -1 0 web-post-tl)
     ; front wall
-    (key-wall-brace 3 lastrow 0 -1 web-post-bl 3 lastrow 0.5 -1 web-post-br)
-    (key-wall-brace 3 lastrow 0.5 -1 web-post-br 4 cornerrow 0.5 -1 web-post-bl)
-    (for [x (range 4 ncols)] (key-wall-brace x cornerrow 0 -1 web-post-bl x cornerrow 0 -1 web-post-br)) ; TODO fix extra wall
-    (for [x (range 5 ncols)] (key-wall-brace x cornerrow 0 -1 web-post-bl (dec x) cornerrow 0 -1 web-post-br))
-    (wall-brace thumb-r-place 0 -1 web-post-br (partial key-place 3 lastrow) 0 -1 web-post-bl)
+    (key-wall-brace wall-xy-offset 3 lastrow 0 -1 web-post-bl 3 lastrow 0.5 -1 web-post-br)
+    (key-wall-brace wall-xy-offset 3 lastrow 0.5 -1 web-post-br 4 cornerrow 0.5 -1 web-post-bl)
+    (for [x (range 4 ncols)] (key-wall-brace wall-xy-offset x cornerrow 0 -1 web-post-bl x cornerrow 0 -1 web-post-br)) ; TODO fix extra wall
+    (for [x (range 5 ncols)] (key-wall-brace wall-xy-offset x cornerrow 0 -1 web-post-bl (dec x) cornerrow 0 -1 web-post-br))
+    (wall-brace wall-xy-offset thumb-r-place 0 -1 web-post-br (partial key-place 3 lastrow) 0 -1 web-post-bl)
     ; thumb walls
-    (wall-brace thumb-r-place 0 -1 web-post-br thumb-r-place 0 -1 web-post-bl)
-    (wall-brace thumb-m-place 0 -1 web-post-br thumb-m-place 0 -1 web-post-bl)
-    (wall-brace thumb-l-place 0 -1 web-post-br thumb-l-place 0 -1 web-post-bl)
-    (wall-brace thumb-l-place 0 1 web-post-tr thumb-l-place 0 1 web-post-tl)
-    (wall-brace thumb-l-place -1 0 web-post-tl thumb-l-place -1 0 web-post-bl)
+    (wall-brace wall-xy-offset thumb-r-place 0 -1 web-post-br thumb-r-place 0 -1 web-post-bl)
+    (wall-brace wall-xy-offset thumb-m-place 0 -1 web-post-br thumb-m-place 0 -1 web-post-bl)
+    (wall-brace wall-xy-offset thumb-l-place 0 -1 web-post-br thumb-l-place 0 -1 web-post-bl)
+    (wall-brace wall-xy-offset thumb-l-place 0 1 web-post-tr thumb-l-place 0 1 web-post-tl)
+    (wall-brace wall-xy-offset thumb-l-place -1 0 web-post-tl thumb-l-place -1 0 web-post-bl)
     ; thumb corners
-    (wall-brace thumb-l-place -1 0 web-post-bl thumb-l-place 0 -1 web-post-bl)
-    (wall-brace thumb-l-place -1 0 web-post-tl thumb-l-place 0 1 web-post-tl)
+    (wall-brace wall-xy-offset thumb-l-place -1 0 web-post-bl thumb-l-place 0 -1 web-post-bl)
+    (wall-brace wall-xy-offset thumb-l-place -1 0 web-post-tl thumb-l-place 0 1 web-post-tl)
     ; thumb tweeners
-    (wall-brace thumb-r-place 0 -1 web-post-bl thumb-m-place 0 -1 web-post-br)
-    (wall-brace thumb-m-place 0 -1 web-post-bl thumb-l-place 0 -1 web-post-br)
-    (wall-brace thumb-m-place 0 1 web-post-tl thumb-l-place 0 1 web-post-tr)
-    (wall-brace thumb-l-place -1 0 web-post-bl thumb-l-place -1 0 web-post-tl)
+    (wall-brace wall-xy-offset thumb-r-place 0 -1 web-post-bl thumb-m-place 0 -1 web-post-br)
+    (wall-brace wall-xy-offset thumb-m-place 0 -1 web-post-bl thumb-l-place 0 -1 web-post-br)
+    (wall-brace wall-xy-offset thumb-m-place 0 1 web-post-tl thumb-l-place 0 1 web-post-tr)
+    (wall-brace wall-xy-offset thumb-l-place -1 0 web-post-bl thumb-l-place -1 0 web-post-tl)
     ))
 
 
