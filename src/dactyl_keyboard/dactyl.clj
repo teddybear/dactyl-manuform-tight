@@ -29,7 +29,7 @@
 
 (def thumb-offsets [10 -5 1])
 
-(def keyboard-z-offset 7)                                   ; controls overall height; original=9 with centercol=3; use 16 for centercol=2
+(def keyboard-z-offset 8)                                   ; controls overall height; original=9 with centercol=3; use 16 for centercol=2
 (def bottom-height 0)                                    ; plexiglass plate or printed plate
 (def extra-width 2)                                       ; extra space between the base of keys; original= 2
 (def extra-height -0.5)                                      ; original= 0.5
@@ -564,7 +564,7 @@
          (screw-insert 0 1 bottom-radius top-radius height [-8 -10.5 bottom-height]) ; left
          (screw-insert 0 lastrow bottom-radius top-radius height [-12 -7 bottom-height]) ;thumb
          (screw-insert (- lastcol 1) lastrow bottom-radius top-radius height [10 13.5 bottom-height]) ; bottom right
-         (screw-insert (- lastcol 1) 0 bottom-radius top-radius height [10 7 bottom-height]) ; top right
+         (screw-insert (- lastcol 1) 0 bottom-radius top-radius height [10 8 bottom-height]) ; top right
          (screw-insert 2 (+ lastrow 1) bottom-radius top-radius height [0 6.5 bottom-height]))) ;bottom middle
 
 ; Hole Depth Y: 4.4
@@ -584,7 +584,7 @@
 (def usb-holder (mirror [-1 0 0]
                     (import "../things/holder v8.stl")))
 
-(def usb-holder (translate [-40.8 45.5 bottom-height] usb-holder))
+(def usb-holder (translate [-37.8 48.5 bottom-height] usb-holder))
 (def usb-holder-space
   (translate [0 0 (/ (+  bottom-height 8.2) 2)]
   (extrude-linear {:height (+ bottom-height 8.2) :twist 0 :convexity 0}
