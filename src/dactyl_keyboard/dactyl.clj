@@ -12,7 +12,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;
 
 (def nrows 4)
-(def ncols 6)
+(def ncols 5)
 
 (def column-curvature (deg2rad 17))                         ; 15                        ; curvature of the columns
 (def row-curvature (deg2rad 6))                             ; 5                   ; curvature of the rows
@@ -563,8 +563,8 @@
   (union (screw-insert 2 0 bottom-radius top-radius height [-3 7 bottom-height]) ; top middle
          (screw-insert 0 1 bottom-radius top-radius height [-8 -10.5 bottom-height]) ; left
          (screw-insert 0 lastrow bottom-radius top-radius height [-12 -7 bottom-height]) ;thumb
-         (screw-insert (- lastcol 1) lastrow bottom-radius top-radius height [10 13.5 bottom-height]) ; bottom right
-         (screw-insert (- lastcol 1) 0 bottom-radius top-radius height [10 8 bottom-height]) ; top right
+         (screw-insert (- lastcol 1) lastrow bottom-radius top-radius height [10 1.5 bottom-height]) ; bottom right
+         (screw-insert (- lastcol 1) 0 bottom-radius top-radius height [8 8.5 bottom-height]) ; top right
          (screw-insert 2 (+ lastrow 1) bottom-radius top-radius height [0 6.5 bottom-height]))) ;bottom middle
 
 ; Hole Depth Y: 4.4
@@ -618,7 +618,7 @@
                   ))
     (translate [0 0 -20] (cube 350 350 40))))
 ;
-(spit "things/right.scad"
+(spit "things/right5.scad"
       (write-scad model-right))
 ;
 ;(spit "things/left.scad"
@@ -691,7 +691,7 @@
              (screw-insert-all-shapes 1 1 (- bottom-height screw-head-height))))
 
 ;(spit "things/test2.scad" (write-scad (union bottom-screw-holes-head bottom-screw-holes-top) ))
-(spit "things/right-plate-print.scad"
+(spit "things/right5-plate-print.scad"
       (write-scad
         (difference
           bottom-plate
@@ -703,7 +703,7 @@
             bottom-screw-holes-top
             ))))
 
-(spit "things/right-plate-cut.scad"
+(spit "things/right5-plate-cut.scad"
       (write-scad
         (cut
           (translate [0 0 (- bottom-height)]                ;biggest cutout on top
